@@ -1,153 +1,107 @@
 #include "Funcoes.hpp"
 
 //Retorna um vetor de livro com um determinado idioma
-vector <string> retorna_livro_idioma(string idioma, vector <Livro*> livros){
-  vector <string> aux_livros;
-
-  for(auto aux:livros)
-    if(aux->getIdioma()==idioma)
-      aux_livros.emplace_back(aux->getTitulo());
+vector <Livro*> retorna_livro_idioma(const string& idioma, vector <Livro*>& livros){
+  vector <Livro*> aux_livros (livros.size());
+  vector <Livro*>::iterator auxiliar = std::copy_if(livros.begin(), livros.end(),aux_livros.begin(),[&idioma](const Livro* auxLivro){return (auxLivro->getIdioma())==idioma;});
+  aux_livros.resize(std::distance(aux_livros.begin(),auxiliar));
 
   return aux_livros;
 }
 
-//Funcao para retornar um vetor de livros com um determinado formato
-map <int,string> retorna_livro_formato(int formato, vector <Livro*> livros){
-  map <int,string> aux_livros;
+//Funcao para retornar um vetor de livros do formato Eletronico
+map <int,Livro*> retorna_livro_formato(vector <Livro*>& livros){
+  map <int,Livro*> aux_livros;
 
-  switch(formato){
-    case TEletronico:
-      for(auto aux:livros){
-        try{
-            if (typeid(*aux).name()==typeid(Eletronico).name())
-              aux_livros.insert(pair<int,string> (aux->getAnopublicacao(),aux->getTitulo()));
-        }catch(bad_typeid& e){
-          cerr << "Erro na verificação de tipo" << "\n";
-          exit (1);
-        }catch(...){
-          cerr << "Erro na inserção ou obtenção de dados" << "\n";
-          exit(1);
-        }
-      }
-      break;
-    case TImpresso:
-      for(auto aux:livros){
-        try{
-          if (typeid(*aux).name()==typeid(Impresso).name()){
-            aux_livros.insert(pair<int,string> (aux->getAnopublicacao(),aux->getTitulo()));
-          }
-        }catch(bad_typeid& e){
-          cerr << "Erro na verificação de tipo" << "\n";
-          exit(1);
-        }catch(...){
-          cerr << "Erro na inserção ou obtenção de dados" << "\n";
-          exit(1);
-        }
-      }
-      break;
-    case TAudioBook:
-      for(auto aux:livros){
-        try{
-          if (typeid(*aux).name()==typeid(AudioBook).name())
-            aux_livros.insert(pair<int,string> (aux->getAnopublicacao(),aux->getTitulo()));
-        }catch(bad_typeid& e){
-          cerr << "Erro na verificação de tipo" << "\n";
-          exit(1);
-        }catch(...){
-          cerr << "Erro na inserção ou obtenção de dados" << "\n";
-          exit(1);
-        }
-      }
-      break;
-  }
+  std::for_each(livros.begin(),livros.end(),[&aux_livros](Livro* aux){
+    try{
+      if (typeid(*aux).name()==typeid(Eletronico).name())
+        aux_livros.insert(std::pair<int,Livro*> (aux->getAnopublicacao(),aux));
+    }catch(bad_typeid& e){
+      cerr << "Erro na verificação de tipo" << "\n";
+      exit (1);
+    }catch(...){
+      cerr << "Erro na inserção ou obtenção de dados" << "\n";
+      exit(1);
+    }
+  });
 
   return aux_livros;
 }
 
 //Funcao se escritor possui audiobook
-bool possui_audiobook(string escritor, vector <Livro*> livros){
-  vector <string> vEscritor;
-  vector <string>::iterator auxiliar;
-  for(auto aux:livros){
-    try{
-      if(typeid(*aux).name()==typeid(AudioBook).name()){
-        vEscritor = aux->getEscritores();
-        auxiliar = find(vEscritor.begin(),vEscritor.end(),escritor);
-        if(auxiliar!=vEscritor.end())
-          return true;
-      }
-    }catch(bad_typeid& e){
-      cerr << "Erro na verificação de tipo" << "\n";
-      exit(1);
-    }catch(...){
-      cerr << "Erro" << "\n";
-      exit(1);
+bool possui_audiobook(const string& escritor, vector <Livro*>& livros){
+  vector <Livro*>aux_livros(livros.size());
+  bool flag = false;
+  std::for_each(livros.begin(),livros.end(),[&escritor,&livros,&flag](const Livro* auxLivro){
+    if(typeid(*auxLivro).name()==typeid(AudioBook).name()){
+      vector<string> vEscritor = auxLivro->getEscritores();
+      vector <string>::iterator aux = (find(vEscritor.begin(),vEscritor.end(),escritor));
+      if(aux!=vEscritor.end())
+        flag = true;
     }
-  }
-  return false;
+  });
+  return flag;
 }
 
 //Funcao que retorna uma colecao de livros, indepentende da midia
-vector <Livro*> colecao_livros(string titulo, vector <Livro*> livros){
-  vector <Livro*> vLivros;
-
-  for (auto aux:livros)
-    if(titulo==aux->getTitulo())
-      vLivros.emplace_back(aux);
+vector <Livro*> colecao_livros(const string& titulo, vector <Livro*>& livros){
+  vector <Livro*> vLivros(livros.size());
+  vector <Livro*>::iterator auxiliar = livros.begin();
+  auxiliar=std::copy_if(auxiliar, livros.end(), vLivros.begin(),[&titulo](const Livro* comp){
+      return (comp->getTitulo()==titulo);
+  });
+  vLivros.resize(std::distance(vLivros.begin(),auxiliar));
 
   return vLivros;
 }
 
 //Retorna um vetor de Keywords
-set <string> retorna_keywords(vector <Livro*> livros){
+set <string> retorna_keywords(vector <Livro*>& livros){
     set <string> vKRetorno;
     for(auto aux:livros){
-      set <string> auxiliar = aux->getKeywords();
-      vKRetorno.insert(auxiliar.begin(),auxiliar.end());
+        set <string> auxiliar = aux->getKeywords();
+        vKRetorno.insert(auxiliar.begin(),auxiliar.end());
     }
     return vKRetorno;
 }
 
 //Retorna a quantidade de livros com uma determinada keyword
-int quantidade_livros(string keyword, vector <Livro*> livros){
+int quantidade_livros(const string& keyword, vector <Livro*>& livros){
   int contador = 0;
-  set <string> vKeywords;
-
-  for(auto aux:livros){
-    vKeywords = aux->getKeywords();
-    if(vKeywords.count(keyword))
-      contador++;
+  std::for_each(livros.begin(),livros.end(),[&keyword,&livros,&contador](Livro* aux){
+    set <string> vKeywords = aux->getKeywords();
+    contador+=(vKeywords.count(keyword));
     vKeywords.clear();
-  }
-
+  });
   return contador;
 }
 
 //Retorna um Map com os livros com a quantidade de capitulo menor ou igual a digitada
-map <string,string> quantidade_capitulos(const int quant, vector <Livro*> livros){
-  map <string,string> auxLivros;
-
-  for(auto aux:livros){
+multimap <string,Livro*> quantidade_capitulos(const int& quant, vector <Livro*>& livros){
+  multimap <string,Livro*> auxLivros;
+  std::for_each(livros.begin(),livros.end(),[&quant,&auxLivros](Livro* aux){
     list <string> auxL = aux->getCapitulos();
     int i = auxL.size();
     if(i<=quant){
-      auxLivros.insert(pair<string,string> ((aux->getEscritores()).at(0), aux->getTitulo()));
+      auxLivros.insert(pair<string,Livro*> ((aux->getEscritores()).at(0), aux));
     }
-  }
+  });
+
   return auxLivros;
 }
 
 //Retorna os livros que estao presentes em mais livrarias do que a digitada
-vector <string> retorno_livro_livraria(int& qnt, vector <Livro*> livros){
+vector <string> retorno_livro_livraria(int& qnt, vector <Livro*>& livros){
   vector<string> vaux;
   int cont = 0;
-  for(auto aux:livros){
+  std::for_each(livros.begin(),livros.end(),[&qnt,&cont,&vaux](Livro* auxLivro){
     try{
-      if(typeid(*aux).name()==typeid(Impresso).name()){
-          Impresso* Iaux = dynamic_cast <Impresso*> (aux);
-          if( static_cast <int> (Iaux->getLivrarias().size())>=qnt){ //Convertendo unsigned type to int
-            vaux.emplace_back(Iaux->getTitulo());
+      if(typeid(*auxLivro).name()==typeid(Impresso).name()){
+          if( static_cast <int> (((dynamic_cast <Impresso*> (auxLivro))->getLivrarias()).size())>=qnt){ //Convertendo unsigned type to int
+            vaux.emplace_back((dynamic_cast <Impresso*> (auxLivro))->getTitulo());
             cont++;
+            return true;
           }
 
       }
@@ -161,25 +115,26 @@ vector <string> retorno_livro_livraria(int& qnt, vector <Livro*> livros){
       cerr << "Erro" << "\n";
       exit(1);
     }
-  }
+    return false;
+  });
   qnt = cont;
   return vaux;
 }
 
 //Imprime no terminal o no arquivo todos os dados do livro
-void escreve(string saida, vector <Livro*> livros){
+void escreve(const string& saida, vector <Livro*>& livros){
   if(saida=="[T]"){ //Imprime no terminal
     for(auto aux:livros){
       try{
         if (typeid(*aux).name()==typeid(Impresso).name()){
-            Impresso* Iaux = dynamic_cast <Impresso*> (aux); //Realiza um DownCast para realizar a impressa odos dados das derivadas
-            cout << "Impresso | " << Iaux << endl;
+            //Realiza um DownCast para realizar a impressa odos dados das derivadas
+            cout << "Impresso   | " << dynamic_cast <Impresso*> (aux) << endl;
         }else if(typeid(*aux).name()==typeid(Eletronico).name()){
-            Eletronico* Eaux = dynamic_cast <Eletronico*> (aux); //Realiza um DownCast para realizar a impressa odos dados das derivadas
-            cout << "Eletronico | " << Eaux << endl;
+            //Realiza um DownCast para realizar a impressa odos dados das derivadas
+            cout << "Eletronico | " << dynamic_cast <Eletronico*> (aux) << endl;
         }else{
-            AudioBook* Aaux = dynamic_cast <AudioBook*> (aux); //Realiza um DownCast para realizar a impressa odos dados das derivadas
-            cout << "AudioBook | " << Aaux << endl;
+            //Realiza um DownCast para realizar a impressa odos dados das derivadas
+            cout << "AudioBook  | " << dynamic_cast <AudioBook*> (aux) << endl;
         }
       }catch(bad_cast& e){
         cerr << "Erro de conversão de tipo" << '\n';
@@ -198,14 +153,14 @@ void escreve(string saida, vector <Livro*> livros){
     for (auto aux:livros){
       try{
         if (typeid(*aux).name()==typeid(Impresso).name()){
-            Impresso* Iaux = dynamic_cast <Impresso*> (aux); //Realiza um downcast para imprimir os dados
-            arquivo << "Impresso | " << Iaux << endl;
+            //Realiza um downcast para imprimir os dados
+            arquivo << "Impresso | " << dynamic_cast <Impresso*> (aux) << endl;
         }else if(typeid(*aux).name()==typeid(Eletronico).name()){
-            Eletronico* Eaux = dynamic_cast <Eletronico*> (aux); //Realiza um downcast para imprimir os dados
-            arquivo << "Eletronico | " << Eaux << endl;
+            //Realiza um downcast para imprimir os dados
+            arquivo << "Eletronico | " << dynamic_cast <Eletronico*> (aux) << endl;
         }else{
-            AudioBook* Aaux = dynamic_cast <AudioBook*> (aux); //Realiza um downcast para imprimir os dados
-            arquivo << "AudioBook | " << Aaux << endl;
+            //Realiza um downcast para imprimir os dados
+            arquivo << "AudioBook | " << dynamic_cast <AudioBook*> (aux) << endl;
         }
       }catch(bad_cast& e){
         cerr << "Erro de conversão de tipo" << "\n";
@@ -219,6 +174,21 @@ void escreve(string saida, vector <Livro*> livros){
   }
 }
 
+bool retorna_iterador(const string& nome,vector <Livro*>& livros, vector <Livro*>::iterator& auxiliar,string tipo){
+
+  auxiliar = std::find_if(livros.begin(), livros.end(), [&nome,&tipo](const Livro* comp){
+     return (comp->getTitulo() == nome && typeid(*comp).name()==tipo);});
+   if(auxiliar!=livros.end())
+     return true;
+
+  return false;
+}
+
+void retorna_mapeamento(vector <Livro*>& livros, const map <string,string>& mapeamento){
+  std::for_each(livros.begin(),livros.end(),[&mapeamento](Livro* livro){ //Função lambda que recebe mapeamento por referencia e UM livro
+    livro->setIdioma((mapeamento.find(livro->getIdioma()))->second);
+  });
+}
 
 //--------------------------------------------------------------------------------------------------------------
 //Funcao de separacao
@@ -241,7 +211,7 @@ void LeituraArquivo(vector <Livro*>& livros){
 
 
   for(int i=0; i<MAXARQ; i++){
-    xArquivo = "arquivo"+to_string(i)+".txt";
+    xArquivo = to_string(i+1)+".txt";
     ifstream arquivo( xArquivo, ios::in);
     if(!arquivo){
       cerr << "Erro ao Abrir arquivo" << endl;
@@ -249,6 +219,7 @@ void LeituraArquivo(vector <Livro*>& livros){
     }
 
     arquivo >> tipo; //Lê o Tipo do livro (1,2,3)
+      tipo-=1;
       getline(arquivo,lixo); //Lê o \n
     getline(arquivo,sNome); //Lê o nome do livro
     getline(arquivo,sAuxiliarGeral); //Lê os autores do livro

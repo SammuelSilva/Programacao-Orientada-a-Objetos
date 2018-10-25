@@ -24,9 +24,9 @@ string Eletronico::getFormato(){
 ostream& operator<<(ostream& out, Eletronico* livros){
   out << dynamic_cast <Livro*> (livros);
   if(livros->formato.length() > 10)
-    out << livros->formato.substr(0,10) << " | ";
+    out << setw(10) << std::setfill(' ') <<  livros->formato.substr(0,10) << " | ";
       else
-        out << livros->formato << " | ";
+        out << setw(10) << std::setfill(' ') <<  livros->formato << " | ";
 
   return out;
 }

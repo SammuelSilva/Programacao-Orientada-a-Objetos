@@ -6,22 +6,23 @@ struct Inv_Argument : exception { //Struct que herda exception, responsavel por 
 };
 
 template < typename T >
-void checagem(T valor, const int& argc, const bool& flag);
+void checagem(T valor, const int& argc);
 void liberarMemoria(vector< Livro*>& livros);
 void associar_valor(int& auxNum, char const* argv[], vector<Livro*>& livros);
+void concatenar(string& dado, char const* argv[], const int& argc);
 
 int main(int argc, char const *argv[]) {
   vector <Livro*> livros;
   livros.reserve(16); //Reservando 16 espaços na memoria, a fim de evitar copias
   vector <Livro*> auxVLivros;
+  vector <Livro*> vAuxiliar;
   vector <string> auxiliar;
   short pesquisa;
-  bool flag = (argc < 3 || argc > 3); //verificaçao se a quantidade de argumentos é valida
   string dadoI;
 
 
   //função de verificação dos argumentos
-  checagem(argv, argc,flag);
+  checagem(argv, argc);
 
   //Converte o primeiro argumento passado para short. Se a conversão der 0, o valor passado é invalido
   try{
@@ -38,26 +39,26 @@ int main(int argc, char const *argv[]) {
   //Realização da pesquisa
   switch(pesquisa){
     case 1://Retorna os livros relacionados a um determinado idioma
-      dadoI = argv[2];
-      auxiliar=retorna_livro_idioma(dadoI,livros);
-      if(auxiliar.empty()==1)
-        cout << "Livro com o idioma solicitado não encotrado" << endl;
-      else{
-        cout << "Livros com o idioma: " << dadoI << endl;
-        for(auto aux:auxiliar)
-          cout << aux << endl;
+      {
+        concatenar(dadoI,argv,argc-1);
+        vAuxiliar=retorna_livro_idioma(dadoI,livros);
+        if(vAuxiliar.empty()==1)
+          cout << "Livro com o idioma solicitado não encotrado" << endl;
+        else{
+          cout << "Livros com o idioma: " << dadoI << endl;
+          for(auto aux:vAuxiliar)
+            cout << aux << endl;
+        }
       }
     break;
     case 2: //Retorna os livros relacionados a um determinado formato e ordenados pelo ano de publicacao
       {
-        int auxNum;
-        associar_valor(auxNum,argv,livros);
-        map <int,string> retornados =retorna_livro_formato((auxNum-1),livros);
+        map <int,Livro*> retornados =retorna_livro_formato(livros);
         if(retornados.empty()==1)
           cout << "Não encontrado" << endl;
         else{
-          cout << "Livros com o formato especificado:" << retornados.size() << endl;
-          for(map<int,string>::iterator aux=retornados.begin(); aux!=retornados.end(); ++aux)
+          cout << "Livros com o formato especificado: " << retornados.size() << endl;
+          for(map<int,Livro*>::iterator aux=retornados.begin(); aux!=retornados.end(); ++aux)
             cout << aux->second << endl;
         }
       }
@@ -77,20 +78,28 @@ int main(int argc, char const *argv[]) {
       }
     break;
     case 4: //Verifica se um autor tem ou nao audiobooks
-      dadoI = argv[2];
+      concatenar(dadoI,argv,argc-1);
       if(possui_audiobook(dadoI,livros))
         cout << "Possui" << endl;
       else
         cout << "Não Possui" << endl;
     break;
     case 5: //Dado um titulo retorna todos os livros independente do formato
-      dadoI = argv[2];
+      concatenar(dadoI,argv,argc-1);
       auxVLivros = colecao_livros(dadoI,livros);
       if(auxVLivros.empty()==1)
         cout << "Livro não encontrado" << endl;
       else
-        for(auto aux:auxVLivros)
-          cout << aux << endl;
+        for(auto aux:auxVLivros){
+          if(typeid(*aux).name()==typeid(Impresso).name())
+            cout <<dynamic_cast<Impresso*> (aux) << endl;
+
+          if(typeid(*aux).name()==typeid(Eletronico).name())
+            cout <<dynamic_cast<Eletronico*> (aux) << endl;
+
+          if(typeid(*aux).name()==typeid(AudioBook).name())
+            cout <<dynamic_cast<AudioBook*> (aux) << endl;
+        }
     break;
     case 6: //Retorna todas as keywords disponiveis sem repeticao
       {
@@ -109,18 +118,34 @@ int main(int argc, char const *argv[]) {
       {
         int auxNum;
         associar_valor(auxNum,argv,livros);
-        map <string,string> auxLivros = quantidade_capitulos(auxNum,livros);
+        multimap <string,Livro*> auxLivros = quantidade_capitulos(auxNum,livros);
         if(auxLivros.empty()==1)
           cout << "Nenhum livro encontrado" << endl;
         else{
           cout << "Livros: " << endl;
-          for(map<string,string>::iterator aux=auxLivros.begin(); aux!=auxLivros.end();++aux)
+          for(multimap<string,Livro*>::iterator aux=auxLivros.begin(); aux!=auxLivros.end();++aux)
             cout << aux->second << endl;
         }
       }
     break;
-    case 8:
-      cout << "NOTHING\n";
+    case 8: //Retorna um iterator para cada tipo de livro
+      {
+        concatenar(dadoI,argv,argc-1);
+        vector <Livro*>::iterator IT;
+
+        if(retorna_iterador(dadoI,livros, IT, typeid(Impresso).name())){
+          cout << dynamic_cast<Impresso*>(*IT) << endl;
+        }
+
+        if(retorna_iterador(dadoI,livros, IT, typeid(Eletronico).name())){
+           cout << dynamic_cast<Eletronico*> (*IT) << endl;
+        }
+
+        if(retorna_iterador(dadoI,livros, IT, typeid(AudioBook).name())){
+          cout << dynamic_cast<AudioBook*>(*IT) << endl;
+        }
+
+      }
     break;
     case 9: //Imprime todos os livros com seus dados no terminal ou em um arquivo
       dadoI = argv[2];
@@ -135,7 +160,7 @@ int main(int argc, char const *argv[]) {
     break;
     case 10: //Retorna a quantidade de livros com uma determinada keyword
       {
-        dadoI = argv[2];
+        concatenar(dadoI,argv,argc-1);
         int auxNum = quantidade_livros(dadoI,livros);
         if(auxNum==0)
           cout << "Livros com a keyword " << dadoI << " não foram encontrados" <<endl;
@@ -144,7 +169,17 @@ int main(int argc, char const *argv[]) {
       }
     break;
     case 11:
-      cout << "NOTHING\n";
+        {
+          map <string,string> mapeamento = { pair<string,string> ("Portugues", "POT"),
+                                             pair<string,string> ("Ingles","ING"),
+                                             pair<string,string> ("Espanhol","ESP"),
+                                             pair<string,string> ("Frances", "FRS")};
+          retorna_mapeamento(livros, mapeamento);
+          for(auto aux:livros){
+            cout << aux << endl;
+          }
+          cout << endl;
+        }
     break;
   }
 
@@ -152,18 +187,18 @@ int main(int argc, char const *argv[]) {
   return 0;
 }
 
-//
+//_________________________________________________________________________________________________________________________________
+//_________________________________________________________________________________________________________________________________
+//_________________________________________________________________________________________________________________________________
+//_________________________________________________________________________________________________________________________________
+// FUNÇÕES AUXILIARES
+
 template < typename T >
-void checagem(T valor, const int& argc, const bool& flag){
+void checagem(T valor, const int& argc){
   //Verificação se a opcao desejada seja a '6', pois ela permite a passagem de apenas 1 parametro
-  if(flag){
-    if(argc==2){
-      if(*valor[1]!='6'){
-        cerr << "Quantidade de argumentos invalidos (Espaços devem ser dados com " "): <pesquisa> <dado a procurar>" << '\n';
-        exit(1);
-      }
-    }else{
-      cerr << "Quantidade de argumentos invalidos (Espaços devem ser dados com " "): <pesquisa> <dado a procurar> " << '\n';
+  if(argc==2){
+    if(*valor[1]!='6' && *valor[1]!='2' && (*valor[1]!='1' && *valor[2]!='1')){
+      cerr << "Quantidade de argumentos invalidos: <pesquisa> <dado a procurar>" << '\n';
       exit(1);
     }
   }
@@ -188,4 +223,14 @@ void associar_valor(int& auxNum, char const* argv[], vector<Livro*>& livros){
     liberarMemoria(livros); //Apaga o vector de livro
     exit(1);
   }
+}
+
+//Concatena a entrada para entradas compostas
+void concatenar(string& dado, char const* argv[], const int& argc){
+  dado = "";
+  for(int i=2; i<argc; i++){
+    dado +=argv[i];
+    dado+=" ";
+  }
+  dado+=argv[argc];
 }

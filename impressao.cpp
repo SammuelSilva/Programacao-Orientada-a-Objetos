@@ -28,11 +28,11 @@ int Impresso::getColunas(){
 ostream& operator<<(ostream& out, Impresso* livros){
   out << dynamic_cast <Livro*> (livros);
   if(livros->livrarias[0].length() > 10)
-    out << livros->livrarias[0].substr(0,10) << ". | ";
+    out << setw(10) << std::setfill(' ') <<  livros->livrarias[0].substr(0,10) << " | ";
     else if (livros->livrarias.size()==0)
-      out << "Nenhuma | ";
+      out << setw(10) << std::setfill(' ') <<  "Nenhuma | ";
       else
-        out << livros->livrarias[0] << " | ";
+        out << setw(10) << std::setfill(' ') << livros->livrarias[0] << " | ";
 
   return out;
 }

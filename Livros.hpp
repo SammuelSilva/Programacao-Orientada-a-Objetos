@@ -11,7 +11,7 @@
 
 using namespace std;
 using std::string;
-using std::shared_ptr;
+using std::setw;
 
 class Livro{
   vector <string> escritores;

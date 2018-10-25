@@ -62,19 +62,19 @@ int Livro::getAnopublicacao() const{
 ostream& operator<<(ostream& out, Livro* livros){
 
   if(livros->titulo.length() > 30)
-    out << livros->titulo.substr(0,30) << " | ";
+    out << setw(30) << std::left << livros->titulo.substr(0,30) << " | ";
     else
-      out << livros->titulo << " | ";
+      out << setw(30) << std::left << livros->titulo << " | ";
 
   if(livros->escritores[0].length() > 30)
-    out << livros->escritores[0].substr(0,30) << " | ";
+    out << setw(30) << std::right << livros->escritores[0].substr(0,30) << " | ";
     else
-      out << livros->escritores[0] << " | ";
+      out << setw(30) << std::right <<  livros->escritores[0] << " | ";
 
   if(livros->idiomaOriginal.length() > 10)
-    out << livros->idiomaOriginal.substr(0,10) << " | ";
+    out << setw(10) << std::left << livros->idiomaOriginal.substr(0,10) << " | ";
     else
-      out << livros->idiomaOriginal << " | ";
+      out << setw(10) << std::left << livros->idiomaOriginal << " | ";
 
   if(livros->capitulos.size() < 10)
     out << "00"<<livros->capitulos.size() << " | ";

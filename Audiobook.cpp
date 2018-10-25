@@ -23,7 +23,7 @@ string AudioBook::getFormato(){
 
 ostream& operator<<(ostream& out, AudioBook* livros){
   out << dynamic_cast <Livro*> (livros);
-  out << setprecision(2) << livros->getDuracao() << " | ";
+  out << setw(10) << std::setfill(' ') << setprecision(2) << livros->getDuracao() << " | ";
 
   return out;
 }
